@@ -112,18 +112,18 @@
 
         class Goals extends React.Component {
             addItem = (e) => {
-                e.preventDefault();
-                const name = this.input.value;
+              return API.saveGoal(this.input.value).then((goal) => {
+                this.props.store.dispatch(addGoalAction(goal));
                 this.input.value = '';
-
-                this.props.store.dispatch(addGoalAction({
-                    id: generateId(),
-                    name
-                }))
+              }).catch(() => alert('Try again'))
             }
 
             removeItem = (goal) => {
-                this.props.store.dispatch(removeGoalAction(goal.id))
+                this.props.store.dispatch(removeGoalAction(goal.id));
+                return API.deleteGoal(goal.id).catch(() => {
+                  this.props.store.dispatch(addGoalAction(goal))
+                  alert('Try agin')
+                })
             }
             render(){
                 return(
@@ -140,22 +140,26 @@
         class Todos extends React.Component {
             addItem = (e) => {
                 e.preventDefault();
-                const name = this.input.value;
-                this.input.value = '';
-
-                this.props.store.dispatch(addTodoAction({
-                    id: generateId(),
-                    name,
-                    complete: false
-                }))
+                return API.saveTodo(this.input.value).then((todo) => {
+                  this.props.store.dispatch(addTodoAction(todo))
+                  this.input.value = ''
+                }).catch(() => alert('Try again'))
             }
 
             removeItem = (todo) => {
                 this.props.store.dispatch(removeTodoAction(todo.id))
+                return API.deleteTodo(todo.id).catch(() => {
+                  this.props.store.dispatch(addTodoAction(todo))
+                  alert("Try again")
+                })
             }
 
             toggleItem = (todo) => {
               this.props.store.dispatch(toggleTodoAction(todo.id))
+              return API.saveTodoToggle(todo.id).catch(() => {
+                this.props.store.dispatch(toggleTodoAction(todo.id));
+                alert('Try again')
+              })
             }
             render(){
                 return(
