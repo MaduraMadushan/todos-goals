@@ -27,12 +27,14 @@
        const TOGGLE_TODO = 'TOGGLE_TODO';
        const ADD_GOAL = 'ADD_GOAL';
        const REMOVE_GOAL = 'REMOVE_GOAL';
+       const RECEIVE_DATA = 'RECEIVE_DATA';
 
        const addTodoAction = (todo) => ({type: ADD_TODO, todo});
        const removeTodoAction = (id) => ({type: REMOVE_TODO, id});
        const toggleTodoAction = (id) => ({type: TOGGLE_TODO, id});
        const addGoalAction = (goal) => ({type: ADD_GOAL, goal});
        const removeGoalAction = (id) => ({type: REMOVE_GOAL, id});
+       const receiveDateAction = (todos, goals) => ({type: RECEIVE_DATA, todos, goals})
 
        const checker = (store) => (next) => (action) => {
          if(action.type === ADD_TODO && action.todo.name.toLowerCase().indexOf('bitcoin') !== -1) return alert('Nope, Thats a bad idea');
@@ -74,11 +76,21 @@
          }
        }
 
+       const loading = (state = true, action) => {
+         switch(action.type){
+           case RECEIVE_DATA:
+            return false;
+            default:
+            return state;
+         }
+       }
+
        const store = Redux.createStore(Redux.combineReducers({
          todos,
-         goals
+         goals,
+         loading
        }), Redux.applyMiddleware(checker,logger));
-       store.getState();
+       
        
     </script>
 
@@ -160,11 +172,22 @@
         class App extends React.Component {
             componentDidMount(){
                 const {store} = this.props;
+                Promise.all([
+                  API.fetchTodos(),
+                  API.fetchGoals()
+                ]).then(([todos, goals]) => {
+                  store.dispatch(receiveDateAction(todos, goals))
+                })
+
                 store.subscribe(() => this.forceUpdate())
             }
             render(){
                 const { store } = this.props;
-                const {goals, todos} = store.getState();
+                const {goals, todos, loading} = store.getState();
+
+                if(loading === true){
+                  return <p>loading...</p>;
+                }
                 return(
                     <div>
                         <Todos store={store} todos={todos}/>
